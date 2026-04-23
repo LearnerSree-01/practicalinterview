@@ -1,0 +1,36 @@
+name: Sauce CI
+
+on: [push, pull_request_target]
+
+env:
+  SAUCE_USERNAME: ${{secrets.SAUCE_USERNAME}}
+  SAUCE_ACCESS_KEY: ${{secrets.SAUCE_ACCESS_KEY}}
+
+jobs:
+  build:
+    # ignore the pull request which comes from user dependabot
+    # as this bot has no access to Sauce secrets.
+    if: github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+        - name: ⬇️ Checkout Code
+          uses: actions/checkout@v4
+
+        - name: 🐢 Setup Node
+          uses: actions/setup-node@v4
+          with:
+            node-version-file: '.nvmrc'
+
+        - name: 🏗️ Install Dependencies
+          run: npm install
+
+        - name: 🧪 Test
+          run: npm run test:sauce
+
+        - name: 📦 Upload Logs
+          uses: actions/upload-artifact@v4
+          if: failure()
+          with:
+            name: logs
+            path: logs
+
